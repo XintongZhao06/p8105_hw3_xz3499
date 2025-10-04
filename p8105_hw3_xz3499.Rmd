@@ -1,0 +1,101 @@
+---
+title: "p8105_hw2_xz3499"
+author: "Xintong Zhao"
+date: "2025-10-3"
+output: github_document
+---
+
+## Set the knitr option
+```{r}
+knitr::opts_chunk$set(
+  echo = TRUE,           
+  warning = FALSE,       
+  message = FALSE, 
+  fig.width = 8,         
+  fig.height = 6,        
+  fig.align = "center",  
+  out.width = "90%",     
+  dpi = 300              
+)
+```
+
+## Load required libraries
+```{r}
+library(tidyverse)      
+library(p8105.datasets) 
+library(knitr)          
+library(patchwork)      
+library(lubridate)      
+library(ggthemes) 
+```
+
+## Set a unified image format and theme
+```{r}
+theme_set(theme_minimal(base_size = 12) + 
+            theme(plot.title = element_text(size = 14, face = "bold"),
+                  plot.subtitle = element_text(size = 12),
+                  axis.title = element_text(size = 11),
+                  axis.text = element_text(size = 10),
+                  legend.title = element_text(size = 11),
+                  legend.text = element_text(size = 10)))
+```
+
+## Problem 1
+
+### 1. Load the dataset
+```{r}
+data("instacart")
+```
+
+### A discription of the dataset
+```{r}
+glimpse(instacart)
+view(instacart)
+```
+
+* Size and Structure: 
+
+  * The Instacart dataset contains `r nrow(instacart)` observations of `r ncol(instacart)` variables, representing individual grocery items ordered through the Instacart service. The dataset is structured with each row representing one item within an order, and includes `r length(unique(instacart$order_id))` independent orders, `r length(unique(instacart$user_id))` different users, and `r length(unique(instacart$product_id))` different products. 
+
+* Key variables: 
+
+  * The dataset includes some basic information such as order identification (`order_id`), product information (`product_id`, `product_name`), categorical organization (`aisle_id`, `aisle`, `department_id`, `department`), and user identification (`user_id`). 
+  
+  * Product classification system: All the products are organized in `r length(unique(instacart$aisle_id))` aisles under `r length(unique(instacart$department_id))` departments.
+  
+  * Repurchase behavior: Product with `r (mean(instacart$reordered) * 100) %>% round(1)`% are considered repurchase behavior, indicating that the user has a certain degree of brand or product loyalty.
+  
+  * Shopping cart order: The `add_to_cart_order` records the order in which goods are added to the shopping cart, reflecting the user's shopping decision-making process.
+  
+  * Time pattern: The dataset contains which day of the week(`order_dow`) and which hour of the day(`order_hour_of_day`) orders are placed, as well as the number of days since the last order was placed(`days_since_prior_order`), which can be used to analyze shopping time references.
+  
+* Illstrative examples:
+
+  * `r instacart$product_name[1]`(located in `r instacart$aisle[1]` aisle）
+
+  * `r instacart$product_name[50]` (belonging to `r instacart$department[50]` department）
+
+  * `r instacart$product_name[100]` (Added to the shopping cart as the `r instacart$add_to_cart_order[100]` in the order)
+  
+a. How many aisles are there, and which aisles are the most items ordered from?
+
+The dataset contains `r length(unique(instacart$aisle))` distinct aisles. The top three aisles with the most items ordered are: `r instacart %>% count(aisle, sort = TRUE) %>% slice(1) %>% pull(aisle) `(with `r instacart %>% count(aisle, sort = TRUE) %>% slice(1) %>% pull(n)` items ordered), `r instacart %>% count(aisle, sort = TRUE) %>% slice(2) %>% pull(aisle)` (`r instacart %>% count(aisle, sort = TRUE) %>% slice(2) %>% pull(n)` items), and `r instacart %>% count(aisle, sort = TRUE) %>% slice(3) %>% pull(aisle)` (`r instacart %>% count(aisle, sort = TRUE) %>% slice(3) %>% pull(n)` items).
+
+b. A plot that shows the number of items ordered in each aisle:
+
+```{r}
+instacart %>%
+  count(aisle) %>%
+  filter(n > 10000) %>%
+  mutate(aisle = fct_reorder(aisle, n)) %>%
+  ggplot(aes(x = n, y = aisle)) +
+  geom_col(fill = "steelblue") +
+  labs(
+    title = "Number of Items Ordered by Aisle (Aisles with >10,000 items)",
+    x = "Number of Items Ordered",
+    y = "Aisle Name"
+  )
+```
+
+c. A table showing the three most popular items:
+
